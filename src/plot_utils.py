@@ -22,15 +22,10 @@ def plot_decision_boundaries(l_m,l_p,q_grid,size=(4,4)):
     ax.set_xticks([i for i in range(0,N_steps)[::50]] + [N_steps])
     ax.set_xticklabels([np.round(t_grid[i],2) for i in range(0,N_steps)[::50]] + [np.round(t_grid[N_steps-1],2)])
     
-    
     # Configure vertical axis
-    ax.set_yticks(range(0,len(q_grid)))
-    ax.set_yticklabels(q_grid)
-    for label in ax.yaxis.get_ticklabels():
-        label.set_visible(False)
-    for label in ax.yaxis.get_ticklabels()[::2]:
-        label.set_visible(True)
-        
+    ax.set_yticks(range(0,len(q_grid),2))
+    ax.set_yticklabels(q_grid[::2])
+    
     # Create labels
     values  = np.unique(l.ravel())
     colors  = [ im.cmap(im.norm(value)) for value in values]
