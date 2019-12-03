@@ -172,172 +172,106 @@ class MMATT_Finite_Difference_Solver:
     """
     
     """
-    def __init__(self,params):
-        
-        self.m_params = params
-    
-    def solve(self,N_steps = 500):
-        
-        
-        lambda_m = self.m_params.lambda_m
-        lambda_p = self.m_params.lambda_p
-        delta    = self.m_params.delta
-        alpha    = self.m_params.alpha
-        phi      = self.m_params.phi
-        q_min    = self.m_params.q_min
-        q_max    = self.m_params.q_max
-        
-        solution = solve_optimal_lpm(lambda_m,lambda_p,delta,alpha,phi,q_min,q_max,N_steps)
-        
-        return solution
-        
-    
-def solve_optimal_lpm(lambda_m,lambda_p,delta,alpha,phi,q_min,q_max,N_steps):
-    """
-    Solves the optimal BUY and SELL decisions of the trading algorithm 
-    using backward Euler finite difference scheme.
-    """
-        
 
-    if(not isinstance(lambda_m,(float,int))):
-        raise TypeError('lambda_m has to be type of <float> or <int>')
-    
-    if(lambda_m<0.0):
-        raise ValueError('lambda_m has to be positive!')
-    
-    if(not isinstance(lambda_p,(float,int))):
-        raise TypeError('lambda_p has to be type of <float> or <int>')    
-    
-    if(lambda_p<=0.0):
-        raise ValueError('lambda_p has to be positive!')
-    
-    if(not isinstance(delta,float)):
-        raise TypeError('delta has to be type of <float>')    
-
-    if(delta<=0.0):
-        raise ValueError('delta has to be positive!')
-
-    if(not isinstance(alpha,float)):
-        raise TypeError('alpha has to be type of <float>') 
-    
-    if(alpha<0.0):
-        raise ValueError('alpha has to be positive!')
-    
-    if(not isinstance(phi,float)):
-        raise TypeError('phi has to be type of <float>') 
-
-    if(phi<0.0):
-        raise ValueError('phi has to be positive!')
-
-    if(not isinstance(q_min,int)):
-        raise TypeError('q_min has to be type of <min>') 
-    
-    if(not isinstance(q_max,int)):
-        raise TypeError('q_max has to be type of <min>')
+    @staticmethod
+    def solve(params, N_steps = 500):
+        """
+        Solves the optimal BUY and SELL decisions of the trading algorithm 
+        using backward Euler finite difference scheme.
+        """        
         
-    if(q_max<q_min):
-        raise ValueError('q_max cannot be < q_min')
-    
-    if(not isinstance(N_steps,int)):
-        raise TypeError('N_steps has to be type of <min>')
-    
-    if(N_steps<=0):
-        raise ValueError('N_steps has to be positive')
-    
-    n        = q_max - q_min + 1 
-    q_map    = dict( (q, i) for i, q in enumerate(range(q_max, q_min-1, -1)))
-    q_lookup = lambda q : q_map[q] 
-    
-    # Time step for finite difference
-    dt     = 1.0 / N_steps
-    
-    # Matrix for function h
-    h       = np.zeros((n,N_steps))
-    
-    # Matrix for l^{+}
-    l_p     = np.zeros((n,N_steps))
-    
-    # Matrix for l^{-}
-    l_m     = np.zeros((n,N_steps))   
-    
-    # Terminal condition
-    h[:,-1] = np.array([ - alpha*q**2 for q in range(q_max, q_min-1, -1)])    
-    
-    # Inventory levels
-    q_grid  = [q for q in range(q_max, q_min-1, -1)]
-    
-    # Time points
-    t_grid  = np.zeros(N_steps)
-    t_grid[-1] = 1
-    
-    # Solve DPE/PDE using finite differences
-    for idx in range(N_steps-1, 0, -1):
+        n = params.q_max - params.q_min + 1 
+        q_grid = [q for q in range(params.q_max, params.q_min-1, -1)]
+        q_map = dict( (q, i) for i, q in enumerate(q_grid))
+        q_lookup = lambda q : q_map[q] 
         
-        # Posting indicators for current time step
-        l_m_i = np.zeros(n)
-        l_p_i = np.zeros(n)
+        # Time step for finite difference
+        dt = 1.0 / N_steps
         
-        # h for previous time stemp
-        h_i_p = np.zeros(n)
+        # Matrix for function h
+        h = np.zeros((n,N_steps))
         
-        # h for current time step
-        h_i   = h[:,idx]
+        # Matrix for l^{+}
+        l_p = np.zeros((n,N_steps))
         
-        for q in q_grid:
+        # Matrix for l^{-}
+        l_m = np.zeros((n,N_steps))   
+        
+        # Terminal condition
+        h[:,-1] = np.array([ -params.alpha*q**2 for q in q_grid])    
+        
+        # Time points
+        t_grid = np.zeros(N_steps)
+        t_grid[-1] = 1
+        
+        # Solve DPE/PDE using finite differences
+        for idx in range(N_steps-1, 0, -1):
             
-            l_p_ = 0.0
-            l_m_ = 0.0
+            # Posting indicators for current time step
+            l_m_i = np.zeros(n)
+            l_p_i = np.zeros(n)
             
-            if q == q_max: # 1_{q<q_max} == 0
-                
-                # Determine optimal l^{+}
-                dh_p = 0.5*delta + h_i[q_lookup(q-1)] - h_i[q_lookup(q)]
-                if(dh_p > 0): l_p_ = 1.0
-                
-                # Compute h(t-dt) using backward Euler
-                h_i_p[q_lookup(q)] = h_i[q_lookup(q)] + ( -phi*(q**2)
-                                                      + lambda_p*l_p_*dh_p )*dt
-                l_m_i[q_lookup(q)] = 0.0
-                l_p_i[q_lookup(q)] = l_p_
+            # h for previous time stemp
+            h_i_p = np.zeros(n)
             
-            elif q == q_min: # 1_{q>q_min} == 0
+            # h for current time step
+            h_i = h[:,idx]
+            
+            for q in q_grid:
                 
-                # Determine optimal l^{-}
-                dh_m = 0.5*delta + h_i[q_lookup(q+1)] - h_i[q_lookup(q)]
-                if(dh_m > 0): l_m_ = 1.0
-
-                # Compute h(t-dt) using backward Euler
-                h_i_p[q_lookup(q)] = h_i[q_lookup(q)] + ( -phi*(q**2)
-                                                      + lambda_m*l_m_*dh_m )*dt
-                l_m_i[q_lookup(q)] = l_m_
-                l_p_i[q_lookup(q)] = 0.0      
+                l_p_ = 0.0
+                l_m_ = 0.0
                 
-            else: # 1_{q>q_min} == 1 and 1_{q>q_min} == 1
+                if q == params.q_max: # 1_{q<q_max} == 0
+                    
+                    # Determine optimal l^{+}
+                    dh_p = 0.5*params.delta + h_i[q_lookup(q-1)] - h_i[q_lookup(q)]
+                    if(dh_p > 0): l_p_ = 1.0
+                    
+                    # Compute h(t-dt) using backward Euler
+                    h_i_p[q_lookup(q)] = h_i[q_lookup(q)] + ( -params.phi*(q**2)
+                                                          + params.lambda_p*l_p_*dh_p )*dt
+                    l_m_i[q_lookup(q)] = 0.0
+                    l_p_i[q_lookup(q)] = l_p_
                 
-                # Determine optimal l^{+}
-                dh_p = 0.5*delta + h_i[q_lookup(q-1)] - h_i[q_lookup(q)]
-                if(dh_p > 0): l_p_ = 1.0     
-                
-                # Determine optimal l^{-}
-                dh_m = 0.5*delta + h_i[q_lookup(q+1)] - h_i[q_lookup(q)]
-                if(dh_m > 0): l_m_ = 1.0                
-                
-                # Compute h(t-dt) using backward Euler
-                h_i_p[q_lookup(q)] = h_i[q_lookup(q)] + ( -phi*(q**2)
-                                                      + lambda_p*l_p_*dh_p 
-                                                      + lambda_m*l_m_*dh_m )*dt
-                l_m_i[q_lookup(q)] = l_m_
-                l_p_i[q_lookup(q)] = l_p_                
-                
-        h[:,idx-1]   = h_i_p
-        l_p[:,idx-1] = l_p_i
-        l_m[:,idx-1] = l_m_i
-        
-        t_grid[idx] = t_grid[idx-1] - dt
+                elif q == params.q_min: # 1_{q>q_min} == 0
+                    
+                    # Determine optimal l^{-}
+                    dh_m = 0.5*params.delta + h_i[q_lookup(q+1)] - h_i[q_lookup(q)]
+                    if(dh_m > 0): l_m_ = 1.0
     
-    out = MMATT_Model_Output(l_p,l_m,h,q_lookup,q_grid,t_grid)
+                    # Compute h(t-dt) using backward Euler
+                    h_i_p[q_lookup(q)] = h_i[q_lookup(q)] + ( -params.phi*(q**2)
+                                                          + params.lambda_m*l_m_*dh_m )*dt
+                    l_m_i[q_lookup(q)] = l_m_
+                    l_p_i[q_lookup(q)] = 0.0      
+                    
+                else: # 1_{q>q_min} == 1 and 1_{q>q_min} == 1
+                    
+                    # Determine optimal l^{+}
+                    dh_p = 0.5*params.delta + h_i[q_lookup(q-1)] - h_i[q_lookup(q)]
+                    if(dh_p > 0): l_p_ = 1.0     
+                    
+                    # Determine optimal l^{-}
+                    dh_m = 0.5*params.delta + h_i[q_lookup(q+1)] - h_i[q_lookup(q)]
+                    if(dh_m > 0): l_m_ = 1.0                
+                    
+                    # Compute h(t-dt) using backward Euler
+                    h_i_p[q_lookup(q)] = h_i[q_lookup(q)] + ( -params.phi*(q**2)
+                                                          + params.lambda_p*l_p_*dh_p 
+                                                          + params.lambda_m*l_m_*dh_m )*dt
+                    l_m_i[q_lookup(q)] = l_m_
+                    l_p_i[q_lookup(q)] = l_p_                
+                    
+            h[:,idx-1]   = h_i_p
+            l_p[:,idx-1] = l_p_i
+            l_m[:,idx-1] = l_m_i
+            
+            t_grid[idx] = t_grid[idx-1] - dt
         
-    return out
+        out = MMATT_Model_Output(l_p,l_m,h,q_lookup,q_grid,t_grid)
+            
+        return out
 
 
         
