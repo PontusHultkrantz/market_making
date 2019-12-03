@@ -13,7 +13,7 @@ def plot_decision_boundaries(l_m,l_p,q_grid,size=(4,4)):
     l[(l_p==1) & (l_m==1)] = 3
     
     # Plot decision boundaries
-    fig,ax = plt.subplots(figsize=(4,4))
+    fig,ax = plt.subplots(figsize=size)
     im     = ax.imshow(l, aspect='auto')
     
     # Configure horizontal axis
