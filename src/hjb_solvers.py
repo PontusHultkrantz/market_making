@@ -106,47 +106,31 @@ def mm2_solve_h(T,lamda_m,lamda_p,delta,alpha,phi,q_min,q_max,N_steps):
             
             if q == q_max:
             
-                # Compute (+) indicator argument
-                h_diff_p = 0.5*delta + h_i[lookup(q-1)] - h_i[lookup(q)]
+                dh_p = 0.5*delta + h_i[lookup(q-1)] - h_i[lookup(q)]
+                if(dh_p > 0): l_p_ = 1.0
                 
-                # Determine optimal l_p
-                if(h_diff_p > 0):
-                    l_p_ = 1.0
-                
-                h_i_prev[lookup(q)] = h_i[lookup(q)] - (phi*(q**2))*dt + lamda_p*l_p_*h_diff_p*dt
-                l_m_i[lookup(q)]    = 0.0
-                l_p_i[lookup(q)]    = l_p_
-                
+                h_i_p[lookup(q)] = h_i[lookup(q)] - (phi*(q**2))*dt + lamda_p*l_p_*dh_p*dt
+                l_m_i[lookup(q)] = 0.0
+                l_p_i[lookup(q)] = l_p_
+            
             elif q == q_min:
                 
-                # Compute (-) indicator argument
-                h_diff_m = 0.5*delta + h_i[lookup(q+1)] - h_i[lookup(q)]
-                # Determine optimal l_m
-                
-                if(h_diff_m > 0):
-                    l_m_ = 1.0
+                dh_m = 0.5*delta + h_i[lookup(q+1)] - h_i[lookup(q)]
+                if(dh_m > 0): l_m_ = 1.0
 
-                h_i_p[lookup(q)] = h_i[lookup(q)] - (phi*(q**2))*dt + lamda_m*l_m_*h_diff_m*dt
+                h_i_p[lookup(q)] = h_i[lookup(q)] - (phi*(q**2))*dt + lamda_m*l_m_*dh_m*dt
                 l_m_i[lookup(q)] = l_m_
                 l_p_i[lookup(q)] = 0.0      
                 
             else:
                 
-                # Compute (+) indicator argument
-                h_diff_p = 0.5*delta + h_i[lookup(q-1)] - h_i[lookup(q)]
+                dh_p = 0.5*delta + h_i[lookup(q-1)] - h_i[lookup(q)]
+                if(dh_p > 0): l_p_ = 1.0     
                 
-                # Determine optimal l_p
-                if(h_diff_p > 0):
-                    l_p_ = 1.0     
+                dh_m = 0.5*delta + h_i[lookup(q+1)] - h_i[lookup(q)]
+                if(dh_m > 0): l_m_ = 1.0                
                 
-                # Compute (-) indicator argument
-                h_diff_m = 0.5*delta + h_i[lookup(q+1)] - h_i[lookup(q)]
-                
-                # Determine optimal l_m
-                if(h_diff_m > 0):
-                    l_m_ = 1.0                
-                
-                h_i_p[lookup(q)] = h_i[lookup(q)] - (phi*(q**2))*dt + lamda_p*l_p_*h_diff_p*dt  + lamda_m*l_m_*h_diff_m*dt
+                h_i_p[lookup(q)] = h_i[lookup(q)] - (phi*(q**2))*dt + lamda_p*l_p_*dh_p*dt  + lamda_m*l_m_*dh_m*dt
                 l_m_i[lookup(q)] = l_m_
                 l_p_i[lookup(q)] = l_p_                
                 
