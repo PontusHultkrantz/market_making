@@ -32,5 +32,12 @@ def plot_decision_boundaries(l_m,l_p,q_grid,size=(4,4)):
     labels  = {0:"Do nothing",1:"Buy",2:"Sell",3:"Buy and Sell"}
     patches = [ mpatches.Patch(color=colors[i], label=labels[values[i]] ) for i in range(len(values)) ]
     ax.legend(handles=patches, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0. )
+    
+    
+    # Create axis labels
+    ax.set_xlabel('Trading time')
+    ax.set_ylabel('Inventory/Position')
+    ax.set_title('Optimal decisions')
+    
     plt.tight_layout()
     plt.show()

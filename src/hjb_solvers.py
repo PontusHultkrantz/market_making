@@ -2,8 +2,110 @@
 import numpy as np
 from copy import deepcopy
 
-class MMATT_Model_Output:
+
+class MMATT_Model_Parameters:
+    """
+    Object for encapsulating Market Making At-The-Touch (MMATT) model parameters.
     
+    Member variables are implemented as properties to replicate C-style
+    accessors to prevent/reduce risk of accidental mutation.
+    
+    """
+    def __init__(self,lambda_m,lambda_p,delta,phi,alpha,q_min,q_max):
+        
+        if(not isinstance(lambda_m,(float,int))):
+            raise TypeError('lambda_m has to be type of <float> or <int>')
+
+        if(not isinstance(lambda_p,(float,int))):
+            raise TypeError('lambda_p has to be type of <float> or <int>')       
+
+        if(not isinstance(delta,(float,int))):
+            raise TypeError('delta has to be type of <float> or <int>')
+
+        if(not isinstance(phi,(float,int))):
+            raise TypeError('phi has to be type of <float> or <int>')
+
+        if(not isinstance(alpha,(float,int))):
+            raise TypeError('alpha has to be type of <float> or <int>')            
+
+        if(not isinstance(q_min,int)):
+            raise TypeError('q_min has to be type of <int>')  
+            
+        if(not isinstance(q_max,int)):
+            raise TypeError('q_max has to be type of <int>')  
+        
+        if(q_max <= q_min):
+            raise ValueError('q_max has to be larger than q_min!')
+        
+        self.m_lambda_m = lambda_m # Order-flow at be bid
+        self.m_lambda_p = lambda_p # Order flow at the offer
+        
+        self.m_delta = delta # average "edge" with respect to mid-price
+        self.m_phi   = phi   # running inventory penalty 
+        self.m_alpha = alpha # terminal inventory penalty
+        
+        self.m_q_min = q_min 
+        self.m_q_max = q_max
+    
+    @property
+    def lambda_m(self):
+        """
+        Return copy of the order flow parameter at the bid
+        """
+        return deepcopy(self.m_lambda_m)
+    
+    @property
+    def lambda_p(self):
+        """
+        Return copy of the order flow parameter at the ask
+        """        
+        return deepcopy(self.m_lambda_p)
+
+    @property
+    def delta(self):
+        """
+        Return copy of the average "edge".
+        """        
+        return deepcopy(self.m_delta)
+
+    @property
+    def phi(self):
+        """
+        Return copy of the running inventory penalty.
+        """        
+        return deepcopy(self.m_phi)
+
+    @property
+    def alpha(self):
+        """
+        Return copy of the terminal inventory penalty.
+        """        
+        return deepcopy(self.m_alpha)
+
+    @property
+    def q_min(self):
+        """
+        Return copy of the minimum inventory level.
+        """        
+        return deepcopy(self.m_q_min)    
+
+    @property
+    def q_max(self):
+        """
+        Return copy of the maximum inventory level.
+        """        
+        return deepcopy(self.m_q_max) 
+    
+    
+    
+class MMATT_Model_Output:
+    """
+    Object for encapsulating Market Making At-The-Touch (MMATT) output.
+    
+    Member variables are implemented as properties to replicate C-style
+    accessors to prevent/reduce risk of accidental mutation.
+    
+    """    
     def __init__(self,l_p,l_m,h,q_lookup,q_grid,t_grid):
         
         self.m_l_p = l_m
@@ -37,26 +139,66 @@ class MMATT_Model_Output:
         return deepcopy(self.m_l_m)
     
     def get_l_plus(self,q,t):
-        
+        """
+        Returns SELL decision given inventory q and time remaining till end of
+        trading day t.
+        """
         t_idx = filter(lambda x: x>=t, self.m_t_grid)[0]
-        q_idx = self.m_q_lookup[q]
         
+        if(q in self.m_q_lookup):
+            q_idx = self.m_q_lookup[q]
+        else:
+            raise KeyError(f'Inventory level {q} exceeds inventory grid used in pre-computation.')
+            
         return self.m_l_p[t_idx,q_idx]
         
         
     def get_l_minus(self,q,t):
-        
+        """
+        Returns BUY decision given inventory q and time remaining till end of
+        trading day t.
+        """        
         t_idx = filter(lambda x: x>=t, self.m_t_grid)[0]        
-        q_idx = self.m_q_lookup[q]
+        if(q in self.m_q_lookup):
+            q_idx = self.m_q_lookup[q]
+        else:
+            raise KeyError(f'Inventory level {q} exceeds inventory grid used in pre-computation.')
         
-        return self.m_l_p[t_idx,q_idx]
+        return self.m_l_m[t_idx,q_idx]
+       
         
-
-def solve_l(T,lambda_m,lambda_p,delta,alpha,phi,q_min,q_max,N_steps):
-
-    if(not isinstance(T,(float,int))):
-        raise TypeError('T has to be type of <float>')
     
+class MMATT_Finite_Difference_Solver:
+    """
+    
+    """
+    def __init__(self,params):
+        
+        self.m_params = params
+    
+    def solve(self,N_steps = 500):
+        
+        
+        lambda_m = self.m_params.lambda_m
+        lambda_p = self.m_params.lambda_p
+        delta    = self.m_params.delta
+        alpha    = self.m_params.alpha
+        phi      = self.m_params.phi
+        q_min    = self.m_params.q_min
+        q_max    = self.m_params.q_max
+        
+        solution = solve_optimal_lpm(lambda_m,lambda_p,delta,alpha,phi,q_min,q_max,N_steps)
+        
+        return solution
+        
+    
+def solve_optimal_lpm(lambda_m,lambda_p,delta,alpha,phi,q_min,q_max,N_steps):
+    """
+    Solves the optimal BUY and SELL decisions of the trading algorithm 
+    using backward Euler finite difference scheme.
+    """
+        
+
     if(not isinstance(lambda_m,(float,int))):
         raise TypeError('lambda_m has to be type of <float> or <int>')
     
@@ -107,7 +249,7 @@ def solve_l(T,lambda_m,lambda_p,delta,alpha,phi,q_min,q_max,N_steps):
     q_lookup = lambda q : q_map[q] 
     
     # Time step for finite difference
-    dt     = T / N_steps
+    dt     = 1.0 / N_steps
     
     # Matrix for function h
     h       = np.zeros((n,N_steps))
