@@ -13,25 +13,25 @@ class MMATT_Model_Parameters:
     """
     def __init__(self,lambda_m,lambda_p,delta,phi,alpha,q_min,q_max):
         
-        if(not isinstance(lambda_m,(float,int))):
-            raise TypeError('lambda_m has to be type of <float> or <int>')
+        if(not isinstance(lambda_m,(float,int,np.int32))):
+            raise TypeError(f'lambda_m has to be type of <float> or <int>, not {type(lambda_m)}')
 
-        if(not isinstance(lambda_p,(float,int))):
-            raise TypeError('lambda_p has to be type of <float> or <int>')       
+        if(not isinstance(lambda_p,(float,int,np.int32))):
+            raise TypeError(f'lambda_p has to be type of <float> or <int>, not {type(lambda_m)}')       
 
-        if(not isinstance(delta,(float,int))):
+        if(not isinstance(delta,(float,int,np.int32))):
             raise TypeError('delta has to be type of <float> or <int>')
 
-        if(not isinstance(phi,(float,int))):
+        if(not isinstance(phi,(float,int,np.int32))):
             raise TypeError('phi has to be type of <float> or <int>')
 
-        if(not isinstance(alpha,(float,int))):
+        if(not isinstance(alpha,(float,int,np.int32))):
             raise TypeError('alpha has to be type of <float> or <int>')            
 
-        if(not isinstance(q_min,int)):
+        if(not isinstance(q_min,(int,np.int32))):
             raise TypeError('q_min has to be type of <int>')  
             
-        if(not isinstance(q_max,int)):
+        if(not isinstance(q_max,(int,np.int32))):
             raise TypeError('q_max has to be type of <int>')  
         
         if(q_max <= q_min):
@@ -106,7 +106,7 @@ class MMATT_Model_Output:
     accessors to prevent/reduce risk of accidental mutation.
     
     """    
-    def __init__(self,l_p,l_m,h,q_lookup,q_grid,t_grid):
+    def __init__(self,l_p,l_m,h,q_lookup,q_grid,t_grid,N_steps):
         
         self.m_l_p = l_m
         self.m_l_m = l_p
@@ -115,6 +115,7 @@ class MMATT_Model_Output:
         self.m_q_lookup = q_lookup
         self.m_q_grid = q_grid
         self.m_t_grid = t_grid
+        self.m_N_steps = N_steps
         
     
     @property
@@ -137,6 +138,26 @@ class MMATT_Model_Output:
         Returns a copy of the decision variables l^{-} at each (q,t) node
         """
         return deepcopy(self.m_l_m)
+    
+    @property
+    def q_grid(self):
+        """
+
+        """
+        return deepcopy(self.m_q_grid)
+        
+    @property
+    def t_grid(self):
+        """
+
+        """
+        return deepcopy(self.m_t_grid)
+        
+        
+    @property
+    def N_steps(self):
+        
+        return deepcopy(self.N_steps)
     
     def get_l_plus(self,q,t):
         """
@@ -269,7 +290,7 @@ class MMATT_Finite_Difference_Solver:
             
             t_grid[idx] = t_grid[idx-1] - dt
         
-        out = MMATT_Model_Output(l_p,l_m,h,q_lookup,q_grid,t_grid)
+        out = MMATT_Model_Output(l_p, l_m, h, q_lookup, q_grid, t_grid, N_steps)
             
         return out
 

@@ -18,4 +18,46 @@ params = MMATT_Model_Parameters(lambda_m,lambda_p,delta,phi,alpha,q_min,q_max)
 result = MMATT_Finite_Difference_Solver.solve(params)
 
 # Plot the decision boundaries
+#plot_decision_boundaries(result,(6,4))
+import numpy as np
+
+l = np.zeros_like(result.l_p)
+l[result.l_m==1] = 1
+l[result.l_p==1] = 2
+l[(result.l_p==1) & (result.l_m==1)] = 3
+    
+
+#%%
+import numpy as np
+
+lambda_ms = np.arange(10,300,10)
+lambda_ps = np.arange(10,300,10)
+
+lambdas = []
+for i in range(0,len(lambda_ms)):
+    for j in range(0,len(lambda_ps)):
+        lambdas.append((lambda_ms[i],lambda_ps[j]))
+        
+#%%
+        
+solutions = {}
+for lam in lambdas:
+    
+    lambda_m = lam[0]
+    lambda_p = lam[1]
+    
+    # Encapsulate parameters 
+    params = MMATT_Model_Parameters(lambda_m, lambda_p, delta, phi, alpha, q_min, q_max)
+    
+    # Solve
+    result = MMATT_Finite_Difference_Solver.solve(params)
+    
+    print(lam)
+    solutions.update({lam:result})
+    
+#%%
+    
+# Plot the decision boundaries
+result = solutions[(10,10)]
 plot_decision_boundaries(result.m_l_m,result.m_l_p,result.m_q_grid,(6,4))
+
