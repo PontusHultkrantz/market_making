@@ -41,7 +41,7 @@ class MMATT_Model_Parameters:
         self.m_lambda_p = lambda_p # Order flow at the offer
         
         self.m_delta = delta # average "edge" with respect to mid-price
-        self.m_phi   = phi   # running inventory penalty 
+        self.m_phi = phi   # running inventory penalty 
         self.m_alpha = alpha # terminal inventory penalty
         
         self.m_q_min = q_min 
@@ -110,11 +110,11 @@ class MMATT_Model_Output:
         
         self.m_l_p = l_m
         self.m_l_m = l_p
-        self.m_h   = h
+        self.m_h = h
         
         self.m_q_lookup = q_lookup
-        self.m_q_grid   = q_grid
-        self.m_t_grid   = t_grid
+        self.m_q_grid = q_grid
+        self.m_t_grid = t_grid
         
     
     @property
@@ -263,7 +263,7 @@ class MMATT_Finite_Difference_Solver:
                     l_m_i[q_lookup(q)] = l_m_
                     l_p_i[q_lookup(q)] = l_p_                
                     
-            h[:,idx-1]   = h_i_p
+            h[:,idx-1] = h_i_p
             l_p[:,idx-1] = l_p_i
             l_m[:,idx-1] = l_m_i
             
