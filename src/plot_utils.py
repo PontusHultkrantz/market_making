@@ -21,6 +21,11 @@ def plot_decision_boundaries(result,size=(4,4)):
     ax[0].set_title('Offer side')
     ax[0].set_yticks(range(0,len(result.q_grid),2))
     ax[0].set_yticklabels(result.q_grid[::2])
+    
+    ax[0].set_xticks([i for i in range(0,result.N_steps)[::50]] + [result.N_steps])
+    ax[0].set_xticklabels([np.round(result.t_grid[i],2) for i in range(0,result.N_steps)[::50]] + [np.round(result.t_grid[result.N_steps-1],2)])
+    
+
     # Create labels
     values  = np.unique(result.l_p.ravel())
     colors  = [ im_1.cmap(im_1.norm(value)) for value in values]
@@ -36,6 +41,12 @@ def plot_decision_boundaries(result,size=(4,4)):
     ax[1].set_title('Bid Side')
     ax[1].set_yticks(range(0,len(result.q_grid),2))
     ax[1].set_yticklabels(result.q_grid[::2])
+    
+    ax[1].set_xticks([i for i in range(0,result.N_steps)[::50]] + [result.N_steps])
+    ax[1].set_xticklabels([np.round(result.t_grid[i],2) for i in range(0,result.N_steps)[::50]] + [np.round(result.t_grid[result.N_steps-1],2)])
+    
+    
+    
     # Create labels
     values  = np.unique(result.l_m.ravel())
     colors  = [ im_2.cmap(im_2.norm(value)) for value in values]
