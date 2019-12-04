@@ -2,6 +2,7 @@
 import numpy as np
 from copy import deepcopy
 
+__author__      = "Juha-Samuli Hellen"
 
 class MMATT_Model_Parameters:
     """
