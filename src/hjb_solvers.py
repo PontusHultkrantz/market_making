@@ -13,25 +13,25 @@ class MMATT_Model_Parameters:
     """
     def __init__(self,lambda_m,lambda_p,delta,phi,alpha,q_min,q_max):
         
-        if(not isinstance(lambda_m,(float,int,np.int32))):
+        if(not isinstance(lambda_m,(float,int,np.int32,np.int64))):
             raise TypeError(f'lambda_m has to be type of <float> or <int>, not {type(lambda_m)}')
 
-        if(not isinstance(lambda_p,(float,int,np.int32))):
+        if(not isinstance(lambda_p,(float,int,np.int32,np.int64))):
             raise TypeError(f'lambda_p has to be type of <float> or <int>, not {type(lambda_m)}')       
 
-        if(not isinstance(delta,(float,int,np.int32))):
+        if(not isinstance(delta,(float,int,np.int32,np.int64))):
             raise TypeError('delta has to be type of <float> or <int>')
 
-        if(not isinstance(phi,(float,int,np.int32))):
+        if(not isinstance(phi,(float,int,np.int32,np.int64))):
             raise TypeError('phi has to be type of <float> or <int>')
 
-        if(not isinstance(alpha,(float,int,np.int32))):
+        if(not isinstance(alpha,(float,int,np.int32,np.int64))):
             raise TypeError('alpha has to be type of <float> or <int>')            
 
-        if(not isinstance(q_min,(int,np.int32))):
+        if(not isinstance(q_min,(int,np.int32,np.int64))):
             raise TypeError('q_min has to be type of <int>')  
             
-        if(not isinstance(q_max,(int,np.int32))):
+        if(not isinstance(q_max,(int,np.int32,np.int64))):
             raise TypeError('q_max has to be type of <int>')  
         
         if(q_max <= q_min):
@@ -108,8 +108,8 @@ class MMATT_Model_Output:
     """    
     def __init__(self,l_p,l_m,h,q_lookup,q_grid,t_grid,N_steps):
         
-        self.m_l_p = l_m
-        self.m_l_m = l_p
+        self.m_l_p = l_p
+        self.m_l_m = l_m
         self.m_h = h
         
         self.m_q_lookup = q_lookup
@@ -157,7 +157,7 @@ class MMATT_Model_Output:
     @property
     def N_steps(self):
         
-        return deepcopy(self.N_steps)
+        return deepcopy(self.m_N_steps)
     
     def get_l_plus(self,q,t):
         """
@@ -187,8 +187,8 @@ class MMATT_Model_Output:
         
         return self.m_l_m[t_idx,q_idx]
        
-        
-    
+_EFF_ZERO = 1E-6
+
 class MMATT_Finite_Difference_Solver:
     """
     
@@ -228,6 +228,8 @@ class MMATT_Finite_Difference_Solver:
         # Solve DPE/PDE using finite differences
         for idx in range(N_steps-1, 0, -1):
             
+            t_grid[idx-1] = t_grid[idx] - dt
+            
             # Posting indicators for current time step
             l_m_i = np.zeros(n)
             l_p_i = np.zeros(n)
@@ -247,7 +249,7 @@ class MMATT_Finite_Difference_Solver:
                     
                     # Determine optimal l^{+}
                     dh_p = 0.5*params.delta + h_i[q_lookup(q-1)] - h_i[q_lookup(q)]
-                    if(dh_p > 0): l_p_ = 1.0
+                    if(dh_p > _EFF_ZERO): l_p_ = 1.0
                     
                     # Compute h(t-dt) using backward Euler
                     h_i_p[q_lookup(q)] = h_i[q_lookup(q)] + ( -params.phi*(q**2)
@@ -259,7 +261,7 @@ class MMATT_Finite_Difference_Solver:
                     
                     # Determine optimal l^{-}
                     dh_m = 0.5*params.delta + h_i[q_lookup(q+1)] - h_i[q_lookup(q)]
-                    if(dh_m > 0): l_m_ = 1.0
+                    if(dh_m > _EFF_ZERO): l_m_ = 1.0
     
                     # Compute h(t-dt) using backward Euler
                     h_i_p[q_lookup(q)] = h_i[q_lookup(q)] + ( -params.phi*(q**2)
@@ -271,12 +273,12 @@ class MMATT_Finite_Difference_Solver:
                     
                     # Determine optimal l^{+}
                     dh_p = 0.5*params.delta + h_i[q_lookup(q-1)] - h_i[q_lookup(q)]
-                    if(dh_p > 0): l_p_ = 1.0     
+                    if(dh_p > _EFF_ZERO): l_p_ = 1.0     
                     
                     # Determine optimal l^{-}
                     dh_m = 0.5*params.delta + h_i[q_lookup(q+1)] - h_i[q_lookup(q)]
-                    if(dh_m > 0): l_m_ = 1.0                
-                    
+                    if(dh_m > _EFF_ZERO): l_m_ = 1.0                
+                     
                     # Compute h(t-dt) using backward Euler
                     h_i_p[q_lookup(q)] = h_i[q_lookup(q)] + ( -params.phi*(q**2)
                                                           + params.lambda_p*l_p_*dh_p 
@@ -288,7 +290,7 @@ class MMATT_Finite_Difference_Solver:
             l_p[:,idx-1] = l_p_i
             l_m[:,idx-1] = l_m_i
             
-            t_grid[idx] = t_grid[idx-1] - dt
+            
         
         out = MMATT_Model_Output(l_p, l_m, h, q_lookup, q_grid, t_grid, N_steps)
             
