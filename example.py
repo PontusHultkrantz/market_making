@@ -1,4 +1,5 @@
 #%%
+
 from src.hjb_solvers import MMATT_Model_Parameters
 from src.hjb_solvers import MMATT_Finite_Difference_Solver
 from src.plot_utils  import plot_decision_boundaries
@@ -18,7 +19,7 @@ params = MMATT_Model_Parameters(lambda_m,lambda_p,delta,phi,alpha,q_min,q_max)
 result = MMATT_Finite_Difference_Solver.solve(params,500)
 
 # Plot the decision boundaries
-plot_decision_boundaries(result,(4.5,10))
+plot_decision_boundaries(result,(6,10))
 
 
 
