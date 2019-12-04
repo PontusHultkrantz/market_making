@@ -16,6 +16,8 @@ def plot_decision_boundaries(result,size=(4,4)):
     
     # Plot sell decisions
     im_1 = ax[0].imshow(result.l_p, aspect='auto')
+    ax[0].set_xlabel('Trading time')
+    ax[0].set_ylabel('Inventory/Position')    
     ax[0].set_title('Offer side')
     ax[0].set_yticks(range(0,len(result.q_grid),2))
     ax[0].set_yticklabels(result.q_grid[::2])
@@ -29,6 +31,8 @@ def plot_decision_boundaries(result,size=(4,4)):
     
     # Plot buy decisions
     im_2 = ax[1].imshow(result.l_m, aspect='auto')
+    ax[1].set_xlabel('Trading time')
+    ax[1].set_ylabel('Inventory/Position')
     ax[1].set_title('Bid Side')
     ax[1].set_yticks(range(0,len(result.q_grid),2))
     ax[1].set_yticklabels(result.q_grid[::2])
