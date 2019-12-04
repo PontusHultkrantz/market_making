@@ -29,7 +29,7 @@ def plot_decision_boundaries(result,size=(4,4)):
     
     # Plot buy decisions
     im_2 = ax[1].imshow(result.l_m, aspect='auto')
-    ax[1].set_title('Buy decisions')
+    ax[1].set_title('Bid Side')
     ax[1].set_yticks(range(0,len(result.q_grid),2))
     ax[1].set_yticklabels(result.q_grid[::2])
     # Create labels
